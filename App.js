@@ -1,83 +1,113 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import 'react-native-gesture-handler';
+import React, { useState, useRef, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
-import MarkerItem from "./src/components/MarkerItem";
+import { StyleSheet, View, TouchableOpacity, Image, Text } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import MarkerModal from "./src/components/MarkerModal";
 
 export default function App() {
+  // State for storing markers
   const [markers, setMarkers] = useState([
-    { id: 1, latitude: 59.437, longitude: 24.7536, title: "Tallinn", description: "Estonia", owner: "admin" },
+    { 
+      id: 1, 
+      latitude: 59.437, 
+      longitude: 24.7536, 
+      title: "Tallinn", 
+      description: "Estonia", 
+      images: [],
+      tags: []
+    },
   ]);
+
+  // Current map region state
   const [region, setRegion] = useState({
     latitude: 59.437,
     longitude: 24.7536,
-    latitudeDelta: 0.1,
-    longitudeDelta: 0.1,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
   });
 
+  // Selected marker and modal visibility
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-
-  const currentUser = "Nekko";
   const mapRef = useRef(null);
 
-  // Инициализация карты
-  useEffect(() => {
-    if (mapRef.current) {
-      console.log("Карта инициализирована");
-    }
-  }, [mapRef]);
-
-  // Функция добавления новой метки
+  // Add new marker to the map
   const addMarker = useCallback(() => {
     const newMarker = {
-      id: Date.now(), 
+      id: Date.now(),
       latitude: region.latitude,
       longitude: region.longitude,
-      title: `Метка ${markers.length + 1}`,
-      description: "Новая метка",
-      owner: currentUser,
+      title: `Marker ${markers.length + 1}`,
+      description: "New marker",
+      images: [],
+      tags: []
     };
-    setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
-  }, [region, markers.length, currentUser]);
-
-  // Открытие модального окна с деталями метки
-  const openMarkerDetails = useCallback((marker) => {
-    setSelectedMarker(marker);
+    setMarkers(prev => [...prev, newMarker]);
+    setSelectedMarker(newMarker);
     setModalVisible(true);
-  }, []);
+  }, [region, markers.length]);
 
-  // Сохранение изменений в метке
+  // Save marker changes
   const saveChanges = useCallback((updatedMarker) => {
-    setMarkers((prevMarkers) =>
-      prevMarkers.map((marker) =>
-        marker.id === updatedMarker.id ? updatedMarker : marker
-      )
-    );
+    setMarkers(prev => prev.map(marker => 
+      marker.id === updatedMarker.id ? updatedMarker : marker
+    ));
     setModalVisible(false);
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.flex}>
       <View style={styles.container}>
+        {/* Main Map Component */}
         <MapView
-          provider={PROVIDER_GOOGLE}
-          apiKey="AIzaSyAPE4OcqOT-SRWJTCLyTo2NwBsgip-MLcQ"
           style={styles.map}
           initialRegion={region}
-          onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
+          onRegionChangeComplete={setRegion}
           ref={mapRef}
+          provider="google"
+          mapType="standard"
+          showsUserLocation={true}
         >
-          {markers.map((marker) => (
-            <MarkerItem key={marker.id} marker={marker} onPress={openMarkerDetails} />
+          {/* Render all markers */}
+          {markers.map(marker => (
+            <Marker
+              key={marker.id}
+              coordinate={{
+                latitude: marker.latitude,
+                longitude: marker.longitude
+              }}
+              title={marker.title}
+              description={marker.description}
+              tracksViewChanges={false}
+              zIndex={1000}
+              onPress={() => {
+                console.log("Marker pressed:", marker.id);
+                setSelectedMarker(marker);
+                setModalVisible(true);
+              }}
+              onCalloutPress={() => {
+                setSelectedMarker(marker);
+                setModalVisible(true);
+              }}
+            >
+              <View style={styles.markerPin}>
+                <Text style={styles.markerText}>📍</Text>
+              </View>
+            </Marker>
           ))}
         </MapView>
 
-        <TouchableOpacity style={styles.addButton} onPress={addMarker}>
+        {/* Floating action button */}
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={addMarker}
+          activeOpacity={0.7}
+        >
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
 
+        {/* Marker details modal */}
         <MarkerModal
           visible={modalVisible}
           marker={selectedMarker}
@@ -89,28 +119,47 @@ export default function App() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { width: "100%", height: "100%" },
+  flex: {
+    flex: 1
+  },
+  container: {
+    flex: 1,
+    position: 'relative'
+  },
+  map: {
+    flex: 1,
+    zIndex: 0
+  },
+  markerPin: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerText: {
+    fontSize: 24,
+  },
   addButton: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: "blue",
+    backgroundColor: 'blue',
     width: 60,
     height: 60,
     borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 5,
   },
   addButtonText: {
-    color: "white",
+    color: 'white',
     fontSize: 30,
-    fontWeight: "bold",
-  },
+    fontWeight: 'bold',
+  }
 });

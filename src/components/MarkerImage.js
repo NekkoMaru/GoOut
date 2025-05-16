@@ -1,42 +1,20 @@
-import React from "react";
-import { View, Image, StyleSheet, TouchableOpacity, Text } from "react-native";
+import React from 'react';
+import { Marker } from 'react-native-maps';
+import { View, Image, Text, StyleSheet } from 'react-native';
 
-const MarkerImage = ({ imageUri, onRemove }) => {
-  return (
-    <View style={styles.imageContainer}>
-      <Image source={{ uri: imageUri }} style={styles.image} />
-      <TouchableOpacity style={styles.removeButton} onPress={onRemove}>
-        <Text style={styles.removeButtonText}>X</Text>
-      </TouchableOpacity>
+export const MarkerItem = ({ marker }) => (
+  <Marker coordinate={marker.coords}>
+    <View style={styles.container}>
+      {marker.images?.[0] && (
+        <Image source={{ uri: marker.images[0] }} style={styles.image} />
+      )}
+      <Text style={styles.title}>{marker.title}</Text>
     </View>
-  );
-};
+  </Marker>
+);
 
 const styles = StyleSheet.create({
-  imageContainer: {
-    position: "relative",
-    marginBottom: 10,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-  },
-  removeButton: {
-    position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: "red",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
+  container: { alignItems: 'center' },
+  image: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'white' },
+  title: { fontWeight: 'bold', fontSize: 12 }
 });
-
-export default MarkerImage;

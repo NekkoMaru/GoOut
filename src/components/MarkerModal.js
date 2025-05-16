@@ -1,75 +1,35 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Modal,
-  TextInput,
-  Button,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import MarkerImage from "./MarkerImage";
+import React from 'react';
+import { Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 const MarkerModal = ({ visible, marker, onClose, onSave }) => {
-  const [newTitle, setNewTitle] = useState(marker?.title || "");
-  const [newDescription, setNewDescription] = useState(marker?.description || "");
-  const [images, setImages] = useState(marker?.images || []);
-
-  useEffect(() => {
-    setNewTitle(marker?.title || "");
-    setNewDescription(marker?.description || "");
-    setImages(marker?.images || []);
-  }, [marker]);
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImages([...images, result.assets[0].uri]);
-    }
-  };
-
-  const removeImage = (uri) => {
-    setImages(images.filter((image) => image !== uri));
-  };
-
-  const handleSave = () => {
-    onSave({ ...marker, title: newTitle, description: newDescription, images });
-    onClose();
-  };
+  if (!marker) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onClose}
+    >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Информация о метке</Text>
-          <TextInput style={styles.input} value={newTitle} onChangeText={setNewTitle} />
-          <TextInput
-            style={styles.input}
-            value={newDescription}
-            onChangeText={setNewDescription}
-            multiline
-          />
-
-          <Button title="Добавить фото" onPress={pickImage} />
-
-          <ScrollView style={styles.imageScroll}>
-            {images.map((uri, index) => (
-              <MarkerImage
-                key={index}
-                imageUri={uri}
-                onRemove={() => removeImage(uri)}
-              />
-            ))}
-          </ScrollView>
-
-          <Button title="Сохранить" onPress={handleSave} />
-          <Button title="Закрыть" onPress={onClose} color="red" />
+          <Text style={styles.title}>{marker.title}</Text>
+          <Text style={styles.description}>{marker.description}</Text>
+          
+          <View style={styles.buttonRow}>
+            <TouchableOpacity 
+              style={[styles.button, styles.closeButton]} 
+              onPress={onClose}
+            >
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.button, styles.saveButton]} 
+              onPress={() => onSave(marker)}
+            >
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -79,32 +39,45 @@ const MarkerModal = ({ visible, marker, onClose, onSave }) => {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    width: 300,
-    backgroundColor: "white",
-    padding: 20,
+    width: '80%',
+    backgroundColor: 'white',
     borderRadius: 10,
-    alignItems: "center",
+    padding: 20,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 10,
   },
-  input: {
-    width: "100%",
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
+  description: {
+    fontSize: 16,
+    marginBottom: 20,
+    color: '#666',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  button: {
     padding: 10,
-    marginBottom: 10,
+    borderRadius: 5,
+    minWidth: 100,
+    alignItems: 'center',
   },
-  imageScroll: {
-    width: "100%",
-    marginVertical: 10,
+  closeButton: {
+    backgroundColor: '#ccc',
+  },
+  saveButton: {
+    backgroundColor: 'blue',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
